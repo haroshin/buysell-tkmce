@@ -1,0 +1,25 @@
+# ===========================
+# Server .gitignore
+# ===========================
+
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+logs/
+*.log
+
+# Runtime
+pids/
+*.pid
+*.seed
+
+# Build output
+dist/
+build/

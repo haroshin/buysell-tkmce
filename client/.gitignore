@@ -1,0 +1,30 @@
+# ===========================
+# Client .gitignore
+# ===========================
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+
+# Build output (don't commit dist)
+dist/
+dist-ssr/
+
+# Vite cache
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Editor
+.eslintcache
