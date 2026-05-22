@@ -1,4 +1,5 @@
 import Listing from '../models/Listing.js';
+import User from '../models/User.js';
 
 // @desc    Get all listings (with filtering & pagination)
 // @route   GET /api/listings
@@ -204,6 +205,29 @@ export const markAsSold = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// @desc    Get public stats for homepage
+// @route   GET /api/listings/public/stats
+// @access  Public
+export const getPublicStats = async (req, res) => {
+  try {
+    const activeListings = await Listing.countDocuments({ isActive: true, isSold: false });
+    const totalStudents = await User.countDocuments();
+    
+    // Calculate total saved as the sum of prices of all sold listings
+    const soldListings = await Listing.find({ isSold: true }, 'price');
+    const totalSaved = soldListings.reduce((sum, listing) => sum + listing.price, 0);
+
+    res.json({
+      activeListings,
+      totalStudents,
+      totalSaved
+    });
+  } catch (error) {
+    console.error('Error fetching public stats:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

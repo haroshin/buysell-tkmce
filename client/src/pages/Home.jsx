@@ -63,6 +63,8 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [recentListings, setRecentListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,8 +79,39 @@ const Home = () => {
       }
     };
 
+    const fetchStats = async () => {
+      try {
+        const { data } = await api.get('/listings/public/stats');
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch public stats', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
     fetchRecentListings();
+    fetchStats();
   }, []);
+
+  const formatListingsCount = (count) => {
+    return count !== undefined && count !== null ? `${count}+` : '0+';
+  };
+
+  const formatStudentsCount = (count) => {
+    return count !== undefined && count !== null ? `${count}+` : '0+';
+  };
+
+  const formatSavedAmount = (amount) => {
+    if (amount === undefined || amount === null || amount === 0) return '₹0';
+    if (amount < 1000) return `₹${amount}`;
+    if (amount < 100000) {
+      const thousands = Math.round(amount / 1000);
+      return `₹${thousands}K+`;
+    }
+    const lakhs = Math.round(amount / 100000);
+    return `₹${lakhs}L+`;
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -202,26 +235,38 @@ const Home = () => {
               variants={fadeInUp}
               className="flex items-center justify-center gap-8 sm:gap-12 text-sm"
             >
-              <div className="text-center">
-                <p className="text-2xl font-bold gradient-text">
-                  <AnimatedCounter value="500+" />
-                </p>
-                <p className="text-dark-400">Active Listings</p>
-              </div>
-              <div className="w-px h-10 bg-dark-700" />
-              <div className="text-center">
-                <p className="text-2xl font-bold gradient-text">
-                  <AnimatedCounter value="200+" />
-                </p>
-                <p className="text-dark-400">Students</p>
-              </div>
-              <div className="w-px h-10 bg-dark-700" />
-              <div className="text-center">
-                <p className="text-2xl font-bold gradient-text">
-                  <AnimatedCounter value="₹5L+" />
-                </p>
-                <p className="text-dark-400">Saved</p>
-              </div>
+              {statsLoading ? (
+                <div className="flex gap-8 sm:gap-12 items-center animate-pulse py-2">
+                  <div className="h-8 w-20 bg-dark-800 rounded-lg border border-dark-700" />
+                  <div className="w-px h-8 bg-dark-700" />
+                  <div className="h-8 w-20 bg-dark-800 rounded-lg border border-dark-700" />
+                  <div className="w-px h-8 bg-dark-700" />
+                  <div className="h-8 w-20 bg-dark-800 rounded-lg border border-dark-700" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold gradient-text">
+                      <AnimatedCounter value={formatListingsCount(stats?.activeListings)} />
+                    </p>
+                    <p className="text-dark-400">Active Listings</p>
+                  </div>
+                  <div className="w-px h-10 bg-dark-700" />
+                  <div className="text-center">
+                    <p className="text-2xl font-bold gradient-text">
+                      <AnimatedCounter value={formatStudentsCount(stats?.totalStudents)} />
+                    </p>
+                    <p className="text-dark-400">Students</p>
+                  </div>
+                  <div className="w-px h-10 bg-dark-700" />
+                  <div className="text-center">
+                    <p className="text-2xl font-bold gradient-text">
+                      <AnimatedCounter value={formatSavedAmount(stats?.totalSaved)} />
+                    </p>
+                    <p className="text-dark-400">Saved</p>
+                  </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         </div>

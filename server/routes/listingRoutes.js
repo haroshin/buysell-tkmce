@@ -5,7 +5,8 @@ import {
   createListing,
   updateListing,
   deleteListing,
-  markAsSold
+  markAsSold,
+  getPublicStats
 } from '../controllers/listingController.js';
 import { protect } from '../middleware/auth.js';
 import { checkPendingFees } from '../middleware/enforcement.js';
@@ -15,6 +16,9 @@ const router = express.Router();
 router.route('/')
   .get(getListings)
   .post(protect, checkPendingFees, createListing);
+
+router.route('/public/stats')
+  .get(getPublicStats);
 
 router.route('/:id')
   .get(getListingById)
