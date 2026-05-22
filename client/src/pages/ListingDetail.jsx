@@ -21,6 +21,7 @@ import {
   FiArrowLeft,
   FiAlertTriangle,
 } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 
 const ListingDetail = () => {
   const { id } = useParams();
@@ -122,6 +123,30 @@ const ListingDetail = () => {
         toast.error('Failed to copy link');
       }
     }
+  };
+
+  const handleWhatsAppBroadcast = () => {
+    const defaultImage = "https://via.placeholder.com/800x600?text=No+Image+Available";
+    const primaryImg = listing.images && listing.images.length > 0 ? listing.images[0] : defaultImage;
+    const fullImageUrl = primaryImg.startsWith('http') ? primaryImg : `${window.location.origin}${primaryImg.startsWith('/') ? '' : '/'}${primaryImg}`;
+    const isNegotiableText = listing.isNegotiable ? 'Negotiable' : 'Fixed Price';
+    
+    const messageTemplate = `🔥 *NEW LISTING ON BUY&SELL TKMCE* 🔥
+
+*Item:* ${listing.title}
+💰 *Price:* ₹${listing.price} (${isNegotiableText})
+📁 *Category:* ${listing.category}
+✨ *Condition:* ${listing.condition}
+📍 *Location:* ${listing.location}
+
+🖼️ *Image:* ${fullImageUrl}
+
+🔗 *View Details & Contact Class Agent:*
+${window.location.href}`;
+
+    const encodedMessage = encodeURIComponent(messageTemplate);
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleMarkAsSold = async () => {
@@ -353,6 +378,17 @@ const ListingDetail = () => {
                     <FiShare2 size={20} />
                     <span>Share</span>
                   </Button>
+                  {(user?.role === 'agent' || user?.role === 'admin') && (
+                    <Button
+                      className="px-4 flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20"
+                      variant="outline"
+                      onClick={handleWhatsAppBroadcast}
+                      title="Broadcast to WhatsApp"
+                    >
+                      <FaWhatsapp size={20} className="text-emerald-500" />
+                      <span>Broadcast</span>
+                    </Button>
+                  )}
                 </>
               ) : (
                 <div className="w-full space-y-3">
@@ -386,6 +422,17 @@ const ListingDetail = () => {
                       <FiShare2 size={20} />
                       <span>Share</span>
                     </Button>
+                    {(user?.role === 'agent' || user?.role === 'admin') && (
+                      <Button
+                        className="px-4 flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20"
+                        variant="outline"
+                        onClick={handleWhatsAppBroadcast}
+                        title="Broadcast to WhatsApp"
+                      >
+                        <FaWhatsapp size={20} className="text-emerald-500" />
+                        <span>Broadcast</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

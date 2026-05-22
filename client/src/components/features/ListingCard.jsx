@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import Card from '../common/Card';
 import { FiClock, FiMapPin, FiShare2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import { FaWhatsapp } from 'react-icons/fa';
 
 const ListingCard = ({ listing }) => {
+  const { user } = useAuth();
   const {
     _id,
     title,
@@ -29,6 +32,32 @@ const ListingCard = ({ listing }) => {
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
     return date.toLocaleDateString();
+  };
+
+  const handleWhatsAppBroadcast = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const shareUrl = `${window.location.origin}/listing/${_id}`;
+    const fullImageUrl = displayImage.startsWith('http') ? displayImage : `${window.location.origin}${displayImage.startsWith('/') ? '' : '/'}${displayImage}`;
+    const isNegotiableText = listing.isNegotiable ? 'Negotiable' : 'Fixed Price';
+
+    const messageTemplate = `🔥 *NEW LISTING ON BUY&SELL TKMCE* 🔥
+
+*Item:* ${title}
+💰 *Price:* ₹${price} (${isNegotiableText})
+📁 *Category:* ${category}
+✨ *Condition:* ${condition}
+📍 *Location:* ${location}
+
+🖼️ *Image:* ${fullImageUrl}
+
+🔗 *View Details & Contact Class Agent:*
+${shareUrl}`;
+
+    const encodedMessage = encodeURIComponent(messageTemplate);
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleShare = (e) => {
@@ -79,7 +108,7 @@ const ListingCard = ({ listing }) => {
             </div>
           )}
           {/* Share Button */}
-          <div className="absolute top-3 left-3 z-20">
+          <div className="absolute top-3 left-3 z-20 flex gap-2">
             <button
               onClick={handleShare}
               className="p-2 bg-slate-900/80 hover:bg-slate-800 text-white rounded-full border border-slate-700 transition-colors shadow-lg flex items-center justify-center"
@@ -87,6 +116,15 @@ const ListingCard = ({ listing }) => {
             >
               <FiShare2 size={16} />
             </button>
+            {(user?.role === 'agent' || user?.role === 'admin') && (
+              <button
+                onClick={handleWhatsAppBroadcast}
+                className="p-2 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-400 rounded-full border border-emerald-500/30 transition-colors shadow-lg flex items-center justify-center"
+                title="Broadcast to WhatsApp Group"
+              >
+                <FaWhatsapp size={16} />
+              </button>
+            )}
           </div>
           {/* Condition Badge */}
           <div className="absolute top-3 right-3 z-20">
