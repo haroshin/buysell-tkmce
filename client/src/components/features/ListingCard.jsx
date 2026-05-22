@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../common/Card';
-import { FiClock, FiMapPin } from 'react-icons/fi';
+import { FiClock, FiMapPin, FiShare2 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 const ListingCard = ({ listing }) => {
   const {
@@ -30,6 +31,35 @@ const ListingCard = ({ listing }) => {
     return date.toLocaleDateString();
   };
 
+  const handleShare = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const shareUrl = `${window.location.origin}/listing/${_id}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: `Check out this listing: "${title}" for ₹${price} on Buy&Sell TKMCE!`,
+        url: shareUrl,
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      });
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          toast.success('Link copied to clipboard!');
+        })
+        .catch((error) => {
+          console.error('Failed to copy link:', error);
+          toast.error('Failed to copy link');
+        });
+    }
+  };
+
   return (
     <Link to={`/listing/${_id}`}>
       <Card hover className="h-full flex flex-col group">
@@ -48,6 +78,16 @@ const ListingCard = ({ listing }) => {
               </span>
             </div>
           )}
+          {/* Share Button */}
+          <div className="absolute top-3 left-3 z-20">
+            <button
+              onClick={handleShare}
+              className="p-2 bg-slate-900/80 hover:bg-slate-800 text-white rounded-full border border-slate-700 transition-colors shadow-lg flex items-center justify-center"
+              title="Share Listing"
+            >
+              <FiShare2 size={16} />
+            </button>
+          </div>
           {/* Condition Badge */}
           <div className="absolute top-3 right-3 z-20">
             <span className="bg-slate-900/80 backdrop-blur text-white text-xs px-2.5 py-1 rounded-full border border-slate-700">

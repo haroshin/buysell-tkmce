@@ -100,6 +100,30 @@ const ListingDetail = () => {
     }
   };
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: listing.title,
+          text: `Check out this listing: "${listing.title}" for ₹${listing.price} on Buy&Sell TKMCE!`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      } catch (error) {
+        console.error('Failed to copy link:', error);
+        toast.error('Failed to copy link');
+      }
+    }
+  };
+
   const handleMarkAsSold = async () => {
     setSoldLoading(true);
     try {
@@ -313,11 +337,21 @@ const ListingDetail = () => {
                     variant="outline"
                     onClick={handleToggleWishlist}
                     disabled={wishlistLoading}
+                    title="Add to Wishlist"
                   >
                     <FiHeart
                       size={24}
                       className={wishlisted ? 'fill-pink-500 text-pink-500' : ''}
                     />
+                  </Button>
+                  <Button
+                    className="px-4 flex items-center gap-2"
+                    variant="outline"
+                    onClick={handleShare}
+                    title="Share Listing"
+                  >
+                    <FiShare2 size={20} />
+                    <span>Share</span>
                   </Button>
                 </>
               ) : (
@@ -342,6 +376,15 @@ const ListingDetail = () => {
                       ) : (
                         <><FiCheckCircle className="mr-2" /> Mark as Sold</>
                       )}
+                    </Button>
+                    <Button
+                      className="px-4 flex items-center gap-2"
+                      variant="outline"
+                      onClick={handleShare}
+                      title="Share Listing"
+                    >
+                      <FiShare2 size={20} />
+                      <span>Share</span>
                     </Button>
                   </div>
                 </div>
