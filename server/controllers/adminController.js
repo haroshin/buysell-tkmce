@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Listing from '../models/Listing.js';
 import Report from '../models/Report.js';
+import Ticket from '../models/Ticket.js';
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/stats
@@ -12,13 +13,15 @@ export const getDashboardStats = async (req, res) => {
     const activeListings = await Listing.countDocuments({ isActive: true });
     const soldListings = await Listing.countDocuments({ isSold: true });
     const activeReports = await Report.countDocuments({ status: 'pending' });
+    const openTickets = await Ticket.countDocuments({ status: { $in: ['open', 'in_progress'] } });
 
     res.json({
       totalUsers,
       totalListings,
       activeListings,
       soldListings,
-      activeReports
+      activeReports,
+      openTickets,
     });
   } catch (error) {
     console.error(error);

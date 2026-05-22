@@ -10,6 +10,7 @@ import messageRoutes from './routes/messageRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import agentRoutes from './routes/agentRoutes.js';
+import ticketRoutes from './routes/ticketRoutes.js';
 
 // Load env vars
 dotenv.config();
@@ -35,6 +36,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

@@ -1,6 +1,6 @@
 import express from 'express';
 import { check } from 'express-validator';
-import { registerUser, loginUser, getUserProfile, forgotPassword, resetPassword } from '../controllers/authController.js';
+import { registerUser, loginUser, getUserProfile, forgotPassword, resetPassword, googleLogin } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -15,6 +15,9 @@ router.post(
   ],
   registerUser
 );
+
+// Google OAuth Login route
+router.post('/google', googleLogin);
 
 // Login route
 router.post(

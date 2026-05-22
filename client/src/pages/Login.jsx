@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -10,8 +10,54 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async (response) => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle(response.credential);
+      toast.success('Welcome back!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Google login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (window.google && window.google.accounts) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleGoogleLogin,
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById('google-login-btn'),
+          {
+            theme: 'outline',
+            size: 'large',
+            text: 'signin_with',
+            shape: 'rectangular',
+            width: '320',
+          }
+        );
+      }
+    };
+
+    if (window.google) {
+      initGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google) {
+          initGoogle();
+          clearInterval(timer);
+        }
+      }, 100);
+      return () => clearInterval(timer);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,6 +178,11 @@ const Login = () => {
             <div className="flex-1 h-px bg-dark-700" />
             <span className="text-dark-500 text-sm">or</span>
             <div className="flex-1 h-px bg-dark-700" />
+          </div>
+
+          {/* Google Sign-In */}
+          <div className="flex justify-center mb-6">
+            <div id="google-login-btn"></div>
           </div>
 
           {/* Sign up link */}

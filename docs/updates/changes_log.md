@@ -125,4 +125,87 @@ This update introduces a full agent-broker system. Buyers now contact their own 
 6. Agent clicks **"Mark Complete"** → verify status updates to "Completed"
 7. Try sending a phone number (e.g., `9876543210`) in chat → verify it is stored as `[PHONE HIDDEN]`
 
+---
 
+# Changes Log — Support Ticket System
+
+**Date:** 2026-05-22  
+**Feature:** Full Support Ticket System — Student Submission, Profile Tracking & Admin Management
+
+---
+
+## Summary
+
+Added a complete support ticket system. Students can raise help requests from two entry points: the **Support Widget** (sticky floating button, bottom-right) and the **Profile page**. Tickets are stored in MongoDB and tracked with status badges. Admins receive email alerts and manage all tickets from a new **Tickets tab** in the Admin Dashboard with inline reply and status controls.
+
+---
+
+## Backend Changes
+
+### NEW FILES
+
+| File | Description |
+|---|---|
+| `server/models/Ticket.js` | New Mongoose schema — subject, category, priority, status, description, adminReply, adminRepliedAt |
+| `server/controllers/ticketController.js` | 4 functions: `createTicket`, `getMyTickets`, `getAllTickets`, `replyToTicket` — all with email notifications |
+| `server/routes/ticketRoutes.js` | User routes (POST `/`, GET `/mine`) and admin routes (GET `/`, PUT `/:id/reply`) |
+
+### MODIFIED FILES
+
+#### `server/server.js`
+- Imported `ticketRoutes` and registered under `/api/tickets`
+
+#### `server/controllers/adminController.js`
+- Imported `Ticket` model
+- Added `openTickets` count to `getDashboardStats` response (`status: { $in: ['open', 'in_progress'] }`)
+
+---
+
+## Frontend Changes
+
+### MODIFIED FILES
+
+#### `client/src/components/layout/SupportWidget.jsx`
+- Added `view` state (`'main'` | `'ticket'`) to switch between the main panel and a ticket form
+- New **"Create a Support Ticket"** button in the main view
+- Inline ticket form slides in with `AnimatePresence` — fields: Subject, Category, Priority (pill buttons), Description
+- Back arrow in header returns to main view
+- Submits to `POST /api/tickets` using the `api` service (JWT auto-attached)
+
+#### `client/src/pages/Profile.jsx`
+- Added `AnimatePresence` to framer-motion import
+- Added new icons: `FiLifeBuoy`, `FiChevronDown`, `FiChevronUp`, `FiPlus`, `FiSend`, `FiLoader`
+- Added ticket state: `tickets`, `ticketsLoading`, `openTicketIdx`, `showTicketForm`, `ticketSubmitting`, `ticketForm`
+- Added `fetchMyTickets()` — called on mount, hits `GET /api/tickets/mine`
+- Added `handleTicketSubmit()` — posts ticket, refreshes list on success
+- Added **"My Support Tickets"** section between Quick Links and Sign Out:
+  - "New Ticket" button toggles animated create form
+  - Ticket accordion list — expandable cards showing description + admin reply
+  - Color-coded status (blue/amber/green/grey) and priority (green/amber/red) badges
+
+#### `client/src/pages/AdminDashboard.jsx`
+- Added icons: `FiMessageSquare`, `FiChevronDown`, `FiChevronUp`, `FiSend`
+- Added ticket state: `tickets`, `ticketStatusFilter`, `expandedTicket`, `replyForms`, `replySubmitting`
+- Added `fetchTickets(status)` — called on mount and on filter change
+- Added `handleTicketFilterChange()`, `handleReplyChange()`, `handleReplySubmit()`
+- Added **"Open Tickets"** stat card (violet) to overview grid
+- Added **"Tickets"** tab to tab bar — shows live open count badge e.g. `Tickets (3)`
+- Tickets tab includes: status filter bar, expandable ticket cards (student avatar, subject, category, priority), inline reply textarea + status dropdown + Send Reply button
+
+---
+
+## New API Endpoints
+
+| Method | Route | Access | Description |
+|---|---|---|---|
+| `POST` | `/api/tickets` | User | Create a new ticket (sends 2 emails) |
+| `GET` | `/api/tickets/mine` | User | Get own tickets sorted newest first |
+| `GET` | `/api/tickets` | Admin | Get all tickets with `?status=` filter |
+| `PUT` | `/api/tickets/:id/reply` | Admin | Reply to ticket + update status (sends email to student) |
+
+---
+
+## Known Issues & Fixes Applied
+
+- **404 on ticket routes after file creation** — caused by server running with `npm start` (plain Node, no auto-restart). Fix: restart server after adding new route files. Use `npm run dev` (nodemon) during development.
+- **"Failed to submit ticket" toast** — caused by `api.js` interceptor redirecting to `/login` on 401 before the error message could be read. Fix: log back in; token is restored on next login.

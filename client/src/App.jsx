@@ -11,6 +11,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import ScrollToTop from './components/common/ScrollToTop';
 import PageTransition from './components/common/PageTransition';
 import SupportWidget from './components/layout/SupportWidget';
+import CompleteProfileModal from './components/features/CompleteProfileModal';
 
 // Lazy load pages for performance optimization
 const Home = lazy(() => import('./pages/Home'));
@@ -85,6 +86,7 @@ function App() {
             </main>
             <Footer />
             <SupportWidget />
+            <CompleteProfileModal />
 
           {/* Toast notifications */}
           <Toaster

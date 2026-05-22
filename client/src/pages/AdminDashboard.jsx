@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiUsers, FiPackage, FiAlertOctagon, FiTrendingUp, 
-  FiTrash2, FiShield, FiShieldOff, FiCheck, FiX
+  FiTrash2, FiShield, FiShieldOff, FiCheck, FiX,
+  FiMessageSquare, FiChevronDown, FiChevronUp, FiSend,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -14,12 +15,18 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [ticketStatusFilter, setTicketStatusFilter] = useState('all');
+  const [expandedTicket, setExpandedTicket] = useState(null);
+  const [replyForms, setReplyForms] = useState({});
+  const [replySubmitting, setReplySubmitting] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
     fetchUsers();
     fetchReports();
+    fetchTickets();
   }, []);
 
   const fetchStats = async () => {
@@ -48,6 +55,52 @@ const AdminDashboard = () => {
       setReports(data.reports);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const fetchTickets = async (status = 'all') => {
+    try {
+      const query = status !== 'all' ? `?status=${status}` : '';
+      const { data } = await api.get(`/tickets${query}`);
+      setTickets(data.tickets || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleTicketFilterChange = (status) => {
+    setTicketStatusFilter(status);
+    fetchTickets(status);
+  };
+
+  const handleReplyChange = (ticketId, field, value) => {
+    setReplyForms(prev => ({
+      ...prev,
+      [ticketId]: { ...prev[ticketId], [field]: value },
+    }));
+  };
+
+  const handleReplySubmit = async (ticketId) => {
+    const form = replyForms[ticketId] || {};
+    if (!form.adminReply?.trim()) {
+      toast.error('Please enter a reply message');
+      return;
+    }
+    setReplySubmitting(prev => ({ ...prev, [ticketId]: true }));
+    try {
+      const { data } = await api.put(`/tickets/${ticketId}/reply`, {
+        status: form.status || 'in_progress',
+        adminReply: form.adminReply,
+      });
+      toast.success('Reply sent successfully!');
+      setTickets(prev => prev.map(t => t._id === ticketId ? data.ticket : t));
+      setReplyForms(prev => ({ ...prev, [ticketId]: { adminReply: '', status: '' } }));
+      setExpandedTicket(null);
+      fetchStats();
+    } catch (error) {
+      toast.error('Failed to send reply');
+    } finally {
+      setReplySubmitting(prev => ({ ...prev, [ticketId]: false }));
     }
   };
 
@@ -90,6 +143,7 @@ const AdminDashboard = () => {
     { label: 'Active Listings', value: stats?.activeListings || 0, icon: FiPackage, color: 'text-primary-400', bg: 'bg-primary-500/10', border: 'border-primary-500/20' },
     { label: 'Sold Items', value: stats?.soldListings || 0, icon: FiTrendingUp, color: 'text-accent-400', bg: 'bg-accent-500/10', border: 'border-accent-500/20' },
     { label: 'Pending Reports', value: stats?.activeReports || 0, icon: FiAlertOctagon, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+    { label: 'Open Tickets', value: stats?.openTickets || 0, icon: FiMessageSquare, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
   ];
 
   if (loading) {
@@ -114,7 +168,7 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar">
-          {['overview', 'users', 'reports'].map((tab) => (
+          {['overview', 'users', 'reports', 'tickets'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -124,7 +178,7 @@ const AdminDashboard = () => {
                   : 'bg-dark-800 text-dark-300 hover:bg-dark-700 hover:text-white'
               }`}
             >
-              {tab}
+              {tab === 'tickets' ? `Tickets${stats?.openTickets ? ` (${stats.openTickets})` : ''}` : tab}
             </button>
           ))}
         </div>
@@ -270,6 +324,145 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               ))
+            )}
+          </motion.div>
+        )}
+
+        {/* Tickets Tab */}
+        {activeTab === 'tickets' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            {/* Status Filter */}
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'open', label: 'Open', cls: 'text-blue-400' },
+                { value: 'in_progress', label: 'In Progress', cls: 'text-amber-400' },
+                { value: 'resolved', label: 'Resolved', cls: 'text-emerald-400' },
+                { value: 'closed', label: 'Closed', cls: 'text-dark-400' },
+              ].map((f) => (
+                <button
+                  key={f.value}
+                  onClick={() => handleTicketFilterChange(f.value)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all border ${
+                    ticketStatusFilter === f.value
+                      ? 'bg-primary-500 border-primary-500 text-white'
+                      : 'bg-dark-800 border-dark-700 text-dark-300 hover:border-dark-500 hover:text-white'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {tickets.length === 0 ? (
+              <div className="glass-card p-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-dark-800 flex items-center justify-center mx-auto mb-4">
+                  <FiMessageSquare className="text-2xl text-dark-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">No tickets found</h3>
+                <p className="text-dark-400">There are no support tickets matching this filter.</p>
+              </div>
+            ) : (
+              tickets.map((ticket) => {
+                const STATUS_STYLES = {
+                  open: { label: 'Open', cls: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+                  in_progress: { label: 'In Progress', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+                  resolved: { label: 'Resolved', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+                  closed: { label: 'Closed', cls: 'bg-dark-700 text-dark-400 border-dark-600' },
+                };
+                const CATEGORY_LABELS = {
+                  account: 'Account Issue', listing: 'Listing Problem',
+                  payment: 'Payment & Fees', agent: 'Agent Issue', other: 'Other',
+                };
+                const PRIORITY_LABELS = { low: 'Low', medium: 'Medium', high: 'High' };
+                const statusInfo = STATUS_STYLES[ticket.status] || STATUS_STYLES.open;
+                const isExpanded = expandedTicket === ticket._id;
+                const replyForm = replyForms[ticket._id] || { adminReply: '', status: ticket.status };
+
+                return (
+                  <div key={ticket._id} className="glass-card overflow-hidden border border-dark-700">
+                    {/* Ticket Header */}
+                    <button
+                      onClick={() => setExpandedTicket(isExpanded ? null : ticket._id)}
+                      className="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-dark-800/30 transition-colors"
+                    >
+                      <div className="flex items-start gap-4 min-w-0">
+                        <img src={ticket.user?.avatar} alt={ticket.user?.name} className="w-10 h-10 rounded-full object-cover bg-dark-700 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-white font-semibold text-sm truncate">{ticket.subject}</p>
+                          <p className="text-dark-400 text-xs mt-0.5">
+                            {ticket.user?.name} · {CATEGORY_LABELS[ticket.category] || ticket.category}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusInfo.cls}`}>{statusInfo.label}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                          ticket.priority === 'high' ? 'text-red-400 border-red-500/30 bg-red-500/10'
+                          : ticket.priority === 'medium' ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+                          : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+                        }`}>{PRIORITY_LABELS[ticket.priority]}</span>
+                        {isExpanded ? <FiChevronUp className="text-dark-400" /> : <FiChevronDown className="text-dark-400" />}
+                      </div>
+                    </button>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="border-t border-dark-700 p-5 space-y-4">
+                        {/* User's message */}
+                        <div className="bg-dark-900/50 rounded-xl p-4 border border-dark-700">
+                          <p className="text-[10px] font-bold text-dark-500 uppercase tracking-wider mb-2">Student's Message</p>
+                          <p className="text-sm text-dark-200 leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
+                        </div>
+
+                        {/* Existing reply */}
+                        {ticket.adminReply && (
+                          <div className="bg-primary-500/5 border border-primary-500/20 rounded-xl p-4">
+                            <p className="text-[10px] font-bold text-primary-400 uppercase tracking-wider mb-2">Your Previous Reply</p>
+                            <p className="text-sm text-dark-200 leading-relaxed whitespace-pre-wrap">{ticket.adminReply}</p>
+                          </div>
+                        )}
+
+                        {/* Reply form */}
+                        <div className="space-y-3">
+                          <p className="text-xs font-bold text-dark-300 uppercase tracking-wider">Reply & Update Status</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="sm:col-span-2">
+                              <textarea
+                                value={replyForm.adminReply || ''}
+                                onChange={(e) => handleReplyChange(ticket._id, 'adminReply', e.target.value)}
+                                placeholder="Type your reply to the student..."
+                                rows={3}
+                                className="w-full bg-dark-900 border border-dark-600 text-dark-100 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 placeholder-dark-500 transition-all resize-none"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <label className="text-xs font-semibold text-dark-400">Set Status</label>
+                              <select
+                                value={replyForm.status || ticket.status}
+                                onChange={(e) => handleReplyChange(ticket._id, 'status', e.target.value)}
+                                className="bg-dark-900 border border-dark-600 text-dark-100 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500 transition-all"
+                              >
+                                <option value="open">Open</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                              </select>
+                              <button
+                                onClick={() => handleReplySubmit(ticket._id)}
+                                disabled={replySubmitting[ticket._id]}
+                                className="btn-primary py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed mt-auto"
+                              >
+                                {replySubmitting[ticket._id] ? 'Sending...' : <><FiSend className="text-sm" /> Send Reply</>}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </motion.div>
         )}

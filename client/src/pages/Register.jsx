@@ -27,8 +27,54 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async (response) => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle(response.credential);
+      toast.success('Welcome back!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Google login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (window.google && window.google.accounts) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleGoogleLogin,
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById('google-register-btn'),
+          {
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            shape: 'rectangular',
+            width: '320',
+          }
+        );
+      }
+    };
+
+    if (window.google) {
+      initGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google) {
+          initGoogle();
+          clearInterval(timer);
+        }
+      }, 100);
+      return () => clearInterval(timer);
+    }
+  }, []);
 
   // Mechanical Engineering — full A/B/C picker
   const hasMultipleSections = formData.department === 'Mechanical Engineering';
@@ -155,7 +201,7 @@ const Register = () => {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-dark-200 mb-1.5">
-                Phone Number
+                Phone Number (Optional)
               </label>
               <div className="relative">
                 <HiOutlinePhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
@@ -167,7 +213,6 @@ const Register = () => {
                   onChange={handleChange}
                   placeholder="+91 XXXXX XXXXX"
                   className="input-field pl-10"
-                  required
                 />
               </div>
             </div>
@@ -321,6 +366,11 @@ const Register = () => {
             <div className="flex-1 h-px bg-dark-700" />
             <span className="text-dark-500 text-sm">or</span>
             <div className="flex-1 h-px bg-dark-700" />
+          </div>
+
+          {/* Google Sign-Up */}
+          <div className="flex justify-center mb-6">
+            <div id="google-register-btn"></div>
           </div>
 
           {/* Login link */}

@@ -211,4 +211,79 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getUserProfile, forgotPassword, resetPassword };
+// @desc    Auth user with Google token
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    return res.status(400).json({ message: 'Google ID token is required' });
+  }
+
+  try {
+    // Verify the Google ID token
+    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+    if (!googleRes.ok) {
+      return res.status(400).json({ message: 'Invalid Google token' });
+    }
+
+    const payload = await googleRes.json();
+    const { sub: googleId, email, name, picture } = payload;
+
+    // Verify audience matches if defined in environment variables
+    if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+      return res.status(400).json({ message: 'Google token audience mismatch' });
+    }
+
+    // Try to find user by googleId or email
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      // If user exists but googleId is not linked, link it
+      let wasModified = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        wasModified = true;
+      }
+      // Google logins are verified
+      if (!user.isVerified) {
+        user.isVerified = true;
+        wasModified = true;
+      }
+      if (wasModified) {
+        await user.save();
+      }
+    } else {
+      // Create new user (no password, department, passoutYear, or section yet)
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        avatar: picture || 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
+        isVerified: true
+      });
+    }
+
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        department: user.department,
+        passoutYear: user.passoutYear,
+        section: user.section,
+        avatar: user.avatar,
+        role: user.role,
+        isVerified: user.isVerified
+      },
+      token: generateToken(user._id)
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(500).json({ message: 'Google Authentication Server Error' });
+  }
+};
+
+export { registerUser, loginUser, getUserProfile, forgotPassword, resetPassword, googleLogin };
