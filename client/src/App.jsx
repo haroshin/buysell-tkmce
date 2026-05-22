@@ -29,6 +29,8 @@ const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Messages = lazy(() => import('./pages/Messages'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AgentDashboard = lazy(() => import('./pages/AgentDashboard'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
 
 // Loading spinner fallback for Suspense
 const PageLoader = () => (
@@ -49,6 +51,8 @@ function AppRoutes() {
         <Route path="/category/:name" element={<PageTransition><CategoryPage /></PageTransition>} />
         <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
         <Route path="/search" element={<PageTransition><SearchResults /></PageTransition>} />
+        <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><TermsOfUse /></PageTransition>} />
         
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
