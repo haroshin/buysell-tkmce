@@ -14,6 +14,7 @@ import {
   HiOutlineShieldCheck,
   HiOutlineSun,
   HiOutlineMoon,
+  HiOutlineCalendar,
 } from 'react-icons/hi';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -65,6 +66,10 @@ const Navbar = () => {
         { path: '/profile', label: 'Profile', icon: HiOutlineUser },
       ]
     : [];
+
+  if (isAuthenticated && user?.role === 'admin') {
+    navLinks.splice(1, 0, { path: '/calendar', label: 'Events Calendar', icon: HiOutlineCalendar });
+  }
 
   if (isAuthenticated && user?.role === 'admin') {
     navLinks.splice(1, 0, { path: '/admin', label: 'Admin Panel', icon: HiOutlineShieldCheck });
@@ -152,6 +157,15 @@ const Navbar = () => {
                     </span>
                   )}
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/calendar"
+                    className="p-2.5 rounded-xl text-dark-300 hover:text-primary-400 hover:bg-dark-800 transition-all duration-300"
+                    title="Events Calendar"
+                  >
+                    <HiOutlineCalendar className="text-xl" />
+                  </Link>
+                )}
                 {user?.role === 'admin' && (
                   <Link
                     to="/admin"

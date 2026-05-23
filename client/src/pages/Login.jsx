@@ -65,6 +65,10 @@ const Login = () => {
       toast.error('Please fill in all fields');
       return;
     }
+    if (!email.endsWith('@tkmce.ac.in')) {
+      toast.error('Please use your tkmce mail id');
+      return;
+    }
     setIsLoading(true);
     try {
       await login(email, password);

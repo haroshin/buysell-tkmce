@@ -130,11 +130,14 @@ const ListingDetail = () => {
     const primaryImg = listing.images && listing.images.length > 0 ? listing.images[0] : defaultImage;
     const fullImageUrl = primaryImg.startsWith('http') ? primaryImg : `${window.location.origin}${primaryImg.startsWith('/') ? '' : '/'}${primaryImg}`;
     const isNegotiableText = listing.isNegotiable ? 'Negotiable' : 'Fixed Price';
+    const priceText = listing.originalPrice 
+      ? `₹${listing.price} (~₹${listing.originalPrice}~)` 
+      : `₹${listing.price}`;
     
     const messageTemplate = `🔥 *NEW LISTING ON BUY&SELL TKMCE* 🔥
 
 *Item:* ${listing.title}
-💰 *Price:* ₹${listing.price} (${isNegotiableText})
+💰 *Price:* ${priceText} (${isNegotiableText})
 📁 *Category:* ${listing.category}
 ✨ *Condition:* ${listing.condition}
 📍 *Location:* ${listing.location}
@@ -291,8 +294,11 @@ ${window.location.href}`;
               {listing.title}
             </h1>
             
-            <div className="text-4xl font-black text-accent-400 mb-6">
-              ₹{listing.price}
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-4xl font-black text-accent-400">₹{listing.price}</span>
+              {listing.originalPrice && (
+                <span className="text-2xl text-slate-500 line-through">₹{listing.originalPrice}</span>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-8">

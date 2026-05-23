@@ -14,6 +14,7 @@ import api from '../services/api';
 import ListingCard from '../components/features/ListingCard';
 import SEO from '../components/common/SEO';
 import { useAuth } from '../context/AuthContext';
+import EventCalendar from '../components/features/EventCalendar';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -335,6 +336,36 @@ const Home = () => {
               </Link>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Calendar Section */}
+      <section className="py-16 lg:py-20 bg-dark-950/20 border-t border-dark-800">
+        <div className="page-container">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="section-heading mb-3">
+              Campus Events <span className="gradient-text">Calendar</span>
+            </h2>
+            <p className="text-dark-400 text-lg max-w-lg mx-auto">
+              Stay updated with academic fests, exam timetables, workshops, and college activities.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="glass-card p-6 border border-dark-700/50"
+          >
+            <EventCalendar />
+          </motion.div>
         </div>
       </section>
 

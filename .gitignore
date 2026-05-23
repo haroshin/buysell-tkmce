@@ -24,3 +24,6 @@ pnpm-debug.log*
 *.bak
 *.swp
 *.tmp
+
+# Local documentation
+docs/

@@ -109,6 +109,11 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.email.endsWith('@tkmce.ac.in')) {
+      toast.error('Please use your tkmce mail id');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;

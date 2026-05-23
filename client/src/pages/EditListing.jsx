@@ -41,6 +41,7 @@ const EditListing = () => {
     title: '',
     description: '',
     price: '',
+    originalPrice: '',
     category: '',
     condition: '',
     location: '',
@@ -64,6 +65,7 @@ const EditListing = () => {
           title: data.title || '',
           description: data.description || '',
           price: data.price || '',
+          originalPrice: data.originalPrice || '',
           category: data.category || '',
           condition: data.condition || '',
           location: data.location || '',
@@ -110,6 +112,7 @@ const EditListing = () => {
       const payload = {
         ...form,
         price: Number(form.price),
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
       };
 
       await api.put(`/listings/${id}`, payload);
@@ -191,7 +194,7 @@ const EditListing = () => {
           </div>
 
           {/* Price & Category Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-end">
             <Input
               label="Price (₹) *"
               name="price"
@@ -202,6 +205,17 @@ const EditListing = () => {
               min="0"
               required
               id="edit-listing-price"
+            />
+
+            <Input
+              label="Original Price (₹) - Optional"
+              name="originalPrice"
+              type="number"
+              value={form.originalPrice}
+              onChange={handleChange}
+              placeholder="Enter original price"
+              min="0"
+              id="edit-listing-original-price"
             />
 
             <div className="flex flex-col space-y-1.5">

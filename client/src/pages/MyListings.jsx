@@ -216,7 +216,12 @@ const MyListings = () => {
                         )}
                       </div>
 
-                      <p className="text-2xl font-black text-accent-400 mb-3">₹{listing.price}</p>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-2xl font-black text-accent-400">₹{listing.price}</span>
+                        {listing.originalPrice && (
+                          <span className="text-sm text-slate-500 line-through">₹{listing.originalPrice}</span>
+                        )}
+                      </div>
 
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
                         <span className="flex items-center gap-1.5">

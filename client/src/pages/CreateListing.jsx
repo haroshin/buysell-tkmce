@@ -29,6 +29,7 @@ const CreateListing = () => {
     title: '',
     description: '',
     price: '',
+    originalPrice: '',
     category: '',
     condition: '',
     location: '',
@@ -82,6 +83,7 @@ const CreateListing = () => {
       const payload = {
         ...formData,
         price: Number(formData.price),
+        originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
         images: imagePreview // Using local preview URLs temporarily for demo purposes
       };
 
@@ -118,18 +120,27 @@ const CreateListing = () => {
               maxLength={100}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <Input
                 label="Price (₹)"
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
-                placeholder="e.g., 5000"
+                placeholder="e.g., 3000"
                 required
                 min="0"
               />
-              <div className="flex flex-col justify-end pb-2">
+              <Input
+                label="Original Price (₹) - Optional"
+                type="number"
+                name="originalPrice"
+                value={formData.originalPrice}
+                onChange={handleChange}
+                placeholder="e.g., 5000"
+                min="0"
+              />
+              <div className="flex flex-col pb-2.5">
                 <label className="flex items-center space-x-3 cursor-pointer">
                   <input
                     type="checkbox"

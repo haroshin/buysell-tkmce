@@ -24,10 +24,11 @@ export const getListings = async (req, res) => {
     };
 
     if (keyword) {
+      const safeKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
       query.$and.push({
         $or: [
-          { title: { $regex: keyword, $options: 'i' } },
-          { description: { $regex: keyword, $options: 'i' } }
+          { title: { $regex: safeKeyword, $options: 'i' } },
+          { description: { $regex: safeKeyword, $options: 'i' } }
         ]
       });
     }
@@ -97,12 +98,13 @@ export const getListingById = async (req, res) => {
 // @access  Private
 export const createListing = async (req, res) => {
   try {
-    const { title, description, price, category, condition, location, isNegotiable, images } = req.body;
+    const { title, description, price, originalPrice, category, condition, location, isNegotiable, images } = req.body;
 
     const listing = new Listing({
       title,
       description,
       price,
+      originalPrice,
       category,
       condition,
       location,
@@ -135,9 +137,22 @@ export const updateListing = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized to update this listing' });
     }
 
+    const { title, description, price, originalPrice, category, condition, location, isNegotiable, images } = req.body;
+
+    const updateFields = {};
+    if (title !== undefined) updateFields.title = title;
+    if (description !== undefined) updateFields.description = description;
+    if (price !== undefined) updateFields.price = price;
+    if (originalPrice !== undefined) updateFields.originalPrice = originalPrice;
+    if (category !== undefined) updateFields.category = category;
+    if (condition !== undefined) updateFields.condition = condition;
+    if (location !== undefined) updateFields.location = location;
+    if (isNegotiable !== undefined) updateFields.isNegotiable = isNegotiable;
+    if (images !== undefined) updateFields.images = images;
+
     const updatedListing = await Listing.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
 

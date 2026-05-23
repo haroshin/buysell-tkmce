@@ -16,6 +16,9 @@ const listingSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please add a price']
   },
+  originalPrice: {
+    type: Number
+  },
   category: {
     type: String,
     required: [true, 'Please select a category'],

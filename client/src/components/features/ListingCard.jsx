@@ -12,11 +12,13 @@ const ListingCard = ({ listing }) => {
     _id,
     title,
     price,
+    originalPrice,
     condition,
     images,
     location,
     createdAt,
-    category
+    category,
+    isNegotiable
   } = listing;
 
   const defaultImage = "https://via.placeholder.com/400x300?text=No+Image+Available";
@@ -40,12 +42,15 @@ const ListingCard = ({ listing }) => {
 
     const shareUrl = `${window.location.origin}/listing/${_id}`;
     const fullImageUrl = displayImage.startsWith('http') ? displayImage : `${window.location.origin}${displayImage.startsWith('/') ? '' : '/'}${displayImage}`;
-    const isNegotiableText = listing.isNegotiable ? 'Negotiable' : 'Fixed Price';
+    const isNegotiableText = isNegotiable ? 'Negotiable' : 'Fixed Price';
+    const priceText = originalPrice 
+      ? `₹${price} (~₹${originalPrice}~)` 
+      : `₹${price}`;
 
     const messageTemplate = `🔥 *NEW LISTING ON BUY&SELL TKMCE* 🔥
 
 *Item:* ${title}
-💰 *Price:* ₹${price} (${isNegotiableText})
+💰 *Price:* ${priceText} (${isNegotiableText})
 📁 *Category:* ${category}
 ✨ *Condition:* ${condition}
 📍 *Location:* ${location}
@@ -146,9 +151,16 @@ ${shareUrl}`;
             <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight">
               {title}
             </h3>
-            <span className="text-xl font-black text-accent-400 whitespace-nowrap">
-              ₹{price}
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="text-xl font-black text-accent-400 whitespace-nowrap">
+                ₹{price}
+              </span>
+              {originalPrice && (
+                <span className="text-xs text-slate-500 line-through whitespace-nowrap">
+                  ₹{originalPrice}
+                </span>
+              )}
+            </div>
           </div>
           
           <div className="mt-auto pt-4 space-y-2">

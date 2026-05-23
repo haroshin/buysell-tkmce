@@ -31,6 +31,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AgentDashboard = lazy(() => import('./pages/AgentDashboard'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 
 // Loading spinner fallback for Suspense
 const PageLoader = () => (
@@ -62,6 +63,7 @@ function AppRoutes() {
           <Route path="/my-listings" element={<PageTransition><MyListings /></PageTransition>} />
           <Route path="/wishlist" element={<PageTransition><Wishlist /></PageTransition>} />
           <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
+          <Route path="/calendar" element={<PageTransition><CalendarPage /></PageTransition>} />
           
           {/* Admin Route */}
           <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />

@@ -18,6 +18,10 @@ const registerUser = async (req, res) => {
   const { name, email, password, phone, department, passoutYear, section } = req.body;
 
   try {
+    if (!email || !email.endsWith('@tkmce.ac.in')) {
+      return res.status(400).json({ message: 'Please use your tkmce mail id' });
+    }
+
     const userExists = await User.findOne({ email });
 
     if (userExists) {
@@ -71,6 +75,10 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (!email || !email.endsWith('@tkmce.ac.in')) {
+      return res.status(400).json({ message: 'Please use your tkmce mail id' });
+    }
+
     const user = await User.findOne({ email }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
@@ -133,8 +141,11 @@ const getUserProfile = async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 const forgotPassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   const { email } = req.body;
-  if (!email) return res.status(400).json({ message: 'Email is required' });
 
   try {
     const user = await User.findOne({ email }).select('+resetPasswordOTP +resetPasswordExpire');
@@ -179,13 +190,11 @@ const forgotPassword = async (req, res) => {
 // @route   POST /api/auth/reset-password
 // @access  Public
 const resetPassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   const { email, otp, newPassword } = req.body;
-  if (!email || !otp || !newPassword) {
-    return res.status(400).json({ message: 'Email, OTP, and new password are required' });
-  }
-  if (newPassword.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters' });
-  }
 
   try {
     const user = await User.findOne({ email }).select('+resetPasswordOTP +resetPasswordExpire +password');
@@ -230,6 +239,10 @@ const googleLogin = async (req, res) => {
 
     const payload = await googleRes.json();
     const { sub: googleId, email, name, picture } = payload;
+
+    if (!email || !email.endsWith('@tkmce.ac.in')) {
+      return res.status(400).json({ message: 'Please use your tkmce mail id' });
+    }
 
     // Verify audience matches if defined in environment variables
     if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {

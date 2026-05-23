@@ -33,9 +33,23 @@ router.post(
 router.get('/me', protect, getUserProfile);
 
 // Forgot password - send OTP
-router.post('/forgot-password', forgotPassword);
+router.post(
+  '/forgot-password',
+  [
+    check('email', 'Please include a valid email').isEmail()
+  ],
+  forgotPassword
+);
 
 // Reset password - verify OTP and update
-router.post('/reset-password', resetPassword);
+router.post(
+  '/reset-password',
+  [
+    check('email', 'Please include a valid email').isEmail(),
+    check('otp', 'OTP is required').not().isEmpty(),
+    check('newPassword', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+  ],
+  resetPassword
+);
 
 export default router;
